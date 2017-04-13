@@ -15,10 +15,10 @@ enum Poweruptype{
 }
 
 struct Game{
-	board: HashMap<i32,Cell>,
-	width: i32,
+	board: HashMap<u32,Cell>,
+	width: u32,
 	players: Vec<char>,
-	dice: Vec<i32>,
+	dice: Vec<u32>,
 }
 
 impl Game{
@@ -31,7 +31,7 @@ impl Game{
 		}
 	}
 	
-	fn board(&mut self, width: i32, height: i32){
+	fn board(&mut self, width: u32, height: u32){
 		//Make a board with dimensions of width and height
 		let cell_num = width * height;
 		let mut board = HashMap::new();
@@ -44,26 +44,25 @@ impl Game{
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
-		let mut placeholder = "".to_string();
-		for i in 1..(self.board.len() as u32)/self.width{
+		let mut placeholder = String::new();
+		for i in 1..(self.board.len() as u32)/self.width {
 			if i / 2 == 0{
-				placeholder.push_str(self.row_to_string_reg(self.width, i));
+				placeholder.push_str(&(self.row_to_string_reg(self.width, i)));
 			}else{
-				placeholder.push_str(self.row_to_string_rev(self.width, i));
+				placeholder.push_str((self.row_to_string_rev(self.width, i)));
 			}
 
 		}
-		placeholder;
+		placeholder
 	}
 	
-	fn row_to_string_reg(&self, width: i32, row_num: i32) -> &str{
+	fn row_to_string_reg(&self, width: u32, row_num: u32) -> String{
 		let peak = width * row_num;
 		let base = peak - width + 1;
-		let mut accumulator = "".to_string();
+		let mut accumulator = String::new();
 		
 		for i in base..peak{
-			let x = i as i32;
-			accumulator.push_str(x.to_string());
+			accumulator.push_str(&(i.to_string()));
 		}
 		
 		accumulator.push_str("\n");
@@ -72,11 +71,11 @@ impl Game{
 		for i in base..peak{
 			accumulator.push_str("---+");
 		}
-		accumulator;
+		accumulator
 	}
 	
-	fn row_to_string_rev(&self, width: i32, row_num: i32) -> &str{
-		"".to_string();
+	fn row_to_string_rev<'a>(&'a self, width: u32, row_num: u32) -> &'a str{
+		&("")
 	}
 	
 	fn do_command(&mut self, line: &str){
@@ -109,6 +108,7 @@ struct Player{
 fn main(){
 	let mut game = Game::empty();
 	game.board(3,4);
+	println!("{}", game.to_string());
 	println!("{}", game.width);
 }
 
