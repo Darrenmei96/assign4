@@ -31,26 +31,55 @@ impl Game{
 		}
 	}
 	
-	fn new_board(&mut self, width: i32, height: i32) -> Game{
+	fn board(&mut self, width: i32, height: i32){
 		//Make a board with dimensions of width and height
-		let players = self.players.clone();
-		let dice = self.dice.clone();
 		let cell_num = width * height;
 		let mut board = HashMap::new();
 		for x in 1..cell_num{
 			board.insert(x, Cell::new());
 		}
-		Game{
-			board: board,
-			width: width,
-			players: players,
-			dice: dice,
-		}
+		self.board = board;
+		self.width = width;
 	}
 	
-	fn to_string(&self){
+	fn to_string(&self) -> String{
 		//Convert the board to a string
 		let mut placeholder = "".to_string();
+		for i in 1..(self.board.len() as u32)/self.width{
+			if i / 2 == 0{
+				placeholder.push_str(self.row_to_string_reg(self.width, i));
+			}else{
+				placeholder.push_str(self.row_to_string_rev(self.width, i));
+			}
+
+		}
+		placeholder;
+	}
+	
+	fn row_to_string_reg(&self, width: i32, row_num: i32) -> &str{
+		let peak = width * row_num;
+		let base = peak - width + 1;
+		let mut accumulator = "".to_string();
+		
+		for i in base..peak{
+			let x = i as i32;
+			accumulator.push_str(x.to_string());
+		}
+		
+		accumulator.push_str("\n");
+		
+		accumulator.push_str("+");
+		for i in base..peak{
+			accumulator.push_str("---+");
+		}
+		accumulator;
+	}
+	
+	fn row_to_string_rev(&self, width: i32, row_num: i32) -> &str{
+		"".to_string();
+	}
+	
+	fn do_command(&mut self, line: &str){
 		
 	}
 }
@@ -79,6 +108,7 @@ struct Player{
 
 fn main(){
 	let mut game = Game::empty();
+	game.board(3,4);
 	println!("{}", game.width);
 }
 
