@@ -14,6 +14,27 @@ enum Poweruptype{
 	Escalator,
 }
 
+struct Cell{
+	cell_type: Celltype,
+	powerup_type: Poweruptype,
+	player: String,
+}
+
+impl Cell{
+	fn new() -> Cell{
+		Cell{
+			cell_type: Celltype::Normal_cell, 
+			powerup_type: Poweruptype::Nothing, 
+			player: "".to_string(),
+		}
+	}
+}
+
+struct Player{
+	name: char,
+	powerups: Vec<Poweruptype>,
+}
+
 struct Game{
 	board: HashMap<u32,Cell>,
 	width: u32,
@@ -44,12 +65,14 @@ impl Game{
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
-		let mut placeholder = String::new();
-		for i in 1..(self.board.len() as u32)/self.width {
-			if i / 2 == 0{
+		let mut placeholder = String::from(get_grid(self.width));
+		let height = ((self.board.len()+1) as u32)/self.width;
+		//println!("{}", height);
+		for i in (1..height+1).rev() {
+			if i % 2 != 0{
 				placeholder.push_str(&(self.row_to_string_reg(self.width, i)));
 			}else{
-				placeholder.push_str((self.row_to_string_rev(self.width, i)));
+				placeholder.push_str(&(self.row_to_string_rev(self.width, i)));
 			}
 
 		}
@@ -61,21 +84,29 @@ impl Game{
 		let base = peak - width + 1;
 		let mut accumulator = String::new();
 		
-		for i in base..peak{
-			accumulator.push_str(&(i.to_string()));
+		for i in base..peak+1{
+			let x = format!("|{:3}", i);
+			accumulator.push_str(&x);
 		}
 		
-		accumulator.push_str("\n");
-		
-		accumulator.push_str("+");
-		for i in base..peak{
-			accumulator.push_str("---+");
-		}
+		accumulator.push_str("|\n");
+		accumulator.push_str(&get_grid(width));
 		accumulator
 	}
 	
-	fn row_to_string_rev<'a>(&'a self, width: u32, row_num: u32) -> &'a str{
-		&("")
+	fn row_to_string_rev(&self, width: u32, row_num: u32) -> String{
+		let peak = width * row_num;
+		let base = peak - width + 1;
+		let mut accumulator = String::new();
+		
+		for i in (base..peak+1).rev(){
+			let x = format!("|{:3}", i);
+			accumulator.push_str(&x);
+		}
+		
+		accumulator.push_str("|\n");
+		accumulator.push_str(&get_grid(width));
+		accumulator
 	}
 	
 	fn do_command(&mut self, line: &str){
@@ -83,27 +114,14 @@ impl Game{
 	}
 }
 
-struct Cell{
-	cell_type: Celltype,
-	powerup_type: Poweruptype,
-	player: String,
-}
-
-impl Cell{
-	fn new() -> Cell{
-		Cell{
-			cell_type: Celltype::Normal_cell, 
-			powerup_type: Poweruptype::Nothing, 
-			player: "".to_string(),
-		}
+fn get_grid(width: u32) -> String{
+	let mut accumulator = String::from("+");
+	for i in 0..width{
+		accumulator.push_str("---+");
 	}
+	accumulator.push_str("\n");
+	accumulator
 }
-
-struct Player{
-	name: char,
-	powerups: Vec<Poweruptype>,
-}
-
 
 fn main(){
 	let mut game = Game::empty();
