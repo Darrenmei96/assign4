@@ -1,5 +1,5 @@
 use std::ptr;
-use std::collections::HashMaps;
+use std::collections::HashMap;
 
 enum Celltype{
 	Normal_cell,
@@ -15,7 +15,7 @@ enum Poweruptype{
 }
 
 struct Game{
-	board: Vec<Cell>,
+	board: HashMap<i32,Cell>,
 	width: i32,
 	players: Vec<char>,
 	dice: Vec<i32>,
@@ -32,12 +32,18 @@ impl Game{
 	}
 	
 	fn new_board(&mut self, width: i32, height: i32) -> Game{
-		let players = self.players;
-		let dice = self.dice;
+		let players = self.players.clone();
+		let dice = self.dice.clone();
 		let cell_num = width * height;
 		let mut board = HashMap::new();
-		for 1 in cell_num{
-			
+		for x in 1..cell_num{
+			board.insert(x, Cell::new());
+		}
+		Game{
+			board: board,
+			width: width,
+			players: players,
+			dice: dice,
 		}
 	}
 	
