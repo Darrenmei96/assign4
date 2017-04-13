@@ -32,6 +32,7 @@ impl Game{
 	}
 	
 	fn new_board(&mut self, width: i32, height: i32) -> Game{
+		//Make a board with dimensions of width and height
 		let players = self.players.clone();
 		let dice = self.dice.clone();
 		let cell_num = width * height;
@@ -50,6 +51,7 @@ impl Game{
 	fn to_string(&self){
 		//Convert the board to a string
 		let mut placeholder = "".to_string();
+		
 	}
 }
 
