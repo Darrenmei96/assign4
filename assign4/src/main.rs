@@ -117,9 +117,9 @@ impl Game{
 								  stringvec[2].parse::<u32>().unwrap()),
 			"players" => self.players(stringvec[1].parse::<u32>().unwrap()),
 			"dice" => {
-				let mut s = &stringvec[1..stringvec.len()];
-				self.dice(s);
-				},
+					let mut s = &stringvec[1..];
+					self.dice(s);
+				}
 			
 								  
 			_ => ()
@@ -186,14 +186,14 @@ impl Game{
 		self.board[(pos-1) as usize].player = player.name.clone();
 	}
 	
-	fn dice(&mut self, dicevec: &mut [&str]){
+	fn dice(&mut self, dicevec: &[&str]){
  		let mut dice_roll = Vec::new();
  		for i in dicevec {
 			dice_roll.push(i.parse().unwrap());
 		}
  		self.dice = dice_roll;
+ 		println!("{:?}",self.dice);
  	}
-
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
