@@ -1,42 +1,81 @@
+use std::fmt::{Display, Formatter, Error};
 use std::ptr;
 use std::collections::HashMap;
 
-enum Celltype{
-	Normal_cell,
-	Snake_cell,
-	Ladder_cell,
+enum CellType{
+	NormalCell,
+	SnakeCell,
+	LadderCell,
 }
 
-enum Poweruptype{
+impl Display for CellType{
+	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {
+		match *self{
+			CellType::NormalCell => write!(f," "),
+			CellType::SnakeCell => write!(f,"S"),
+			CellType::LadderCell => write!(f,"L")
+		}
+	}
+}
+
+enum PowerupType{
 	Nothing,
 	Doubleroll,
 	Antivenom,
 	Escalator,
 }
 
+impl Display for PowerupType{
+	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {
+		match *self{
+			PowerupType::Nothing => write!(f," "),
+			PowerupType::Doubleroll => write!(f,"d"),
+			PowerupType::Antivenom => write!(f,"a"),
+			PowerupType::Escalator => write!(f,"e")
+		}
+	}
+}
+
 struct Cell{
-	cell_type: Celltype,
-	powerup_type: Poweruptype,
 	player: String,
+	cell_type: CellType,
+	powerup_type: PowerupType,
 }
 
 impl Cell{
 	fn new() -> Cell{
 		Cell{
-			cell_type: Celltype::Normal_cell, 
-			powerup_type: Poweruptype::Nothing, 
-			player: "".to_string(),
+			player: " ".to_string(),
+			cell_type: CellType::NormalCell, 
+			powerup_type: PowerupType::Nothing,
+		}
+	}
+	fn new_with(player: &str, cell_type: CellType, powerup_type: PowerupType) -> Cell{
+		Cell{
+			player: player.to_string(),
+			cell_type: cell_type,
+			powerup_type: powerup_type,
 		}
 	}
 }
 
+
+impl Display for Cell{
+	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {		
+		write!(f, "|{}{}{}", &self.player, self.cell_type.to_string(), self.powerup_type.to_string());
+		
+		Ok(())
+	}
+}
+
+
 struct Player{
 	name: char,
-	powerups: Vec<Poweruptype>,
+	powerups: Vec<PowerupType>,
 }
 
 struct Game{
-	board: HashMap<u32,Cell>,
+	board: Vec<Cell>,
 	width: u32,
 	players: Vec<char>,
 	dice: Vec<u32>,
@@ -45,7 +84,7 @@ struct Game{
 impl Game{
 	fn empty() -> Game{
 		Game{
-			board: HashMap::new(),
+			board: Vec::new(),
 			width: 0,
 			players: Vec::new(),
 			dice: Vec::new(),
@@ -55,9 +94,9 @@ impl Game{
 	fn board(&mut self, width: u32, height: u32){
 		//Make a board with dimensions of width and height
 		let cell_num = width * height;
-		let mut board = HashMap::new();
-		for x in 1..cell_num{
-			board.insert(x, Cell::new());
+		let mut board = Vec::new();
+		for x in 0..cell_num{
+			board.push(Cell::new());
 		}
 		self.board = board;
 		self.width = width;
@@ -88,8 +127,13 @@ impl Game{
 			let x = format!("|{:3}", i);
 			accumulator.push_str(&x);
 		}
-		
 		accumulator.push_str("|\n");
+		
+		for i in base..peak+1{
+			accumulator.push_str(&(self.board[(i-1) as usize].to_string()))
+		}
+		accumulator.push_str("|\n");
+		
 		accumulator.push_str(&get_grid(width));
 		accumulator
 	}
@@ -103,8 +147,13 @@ impl Game{
 			let x = format!("|{:3}", i);
 			accumulator.push_str(&x);
 		}
-		
 		accumulator.push_str("|\n");
+		
+		for i in (base..peak+1).rev(){
+			accumulator.push_str(&(self.board[(i-1) as usize].to_string()));
+		}
+		accumulator.push_str("|\n");
+		
 		accumulator.push_str(&get_grid(width));
 		accumulator
 	}
@@ -125,7 +174,7 @@ fn get_grid(width: u32) -> String{
 
 fn main(){
 	let mut game = Game::empty();
-	game.board(3,4);
+	game.board(5,5);
 	println!("{}", game.to_string());
 	println!("{}", game.width);
 }
