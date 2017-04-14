@@ -193,6 +193,7 @@ impl Game{
 		}
  		self.dice = dice_roll;
  	}
+
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
