@@ -116,7 +116,10 @@ impl Game{
 			"board" => self.board(stringvec[1].parse::<u32>().unwrap(), 
 								  stringvec[2].parse::<u32>().unwrap()),
 			"players" => self.players(stringvec[1].parse::<u32>().unwrap()),
-			//"dice" => self.dice(&stringvec[1..]),
+			"dice" => {
+				let mut s = &stringvec[1..stringvec.len()];
+				self.dice(s);
+				},
 			
 								  
 			_ => ()
@@ -147,11 +150,12 @@ impl Game{
 		
 		//put all the players on the first cell
 		for i in 0..self.players.len(){
-			self.move_to(self.players[i].clone(), 1);
+			let mut x = self.players[i].clone();
+			self.move_to(x, 1);
 		}
 	}
 	
-	fn move_to(&mut self, &mut player: Player, pos: u32){
+	fn move_to(&mut self, mut player: Player, pos: u32){
 		//if this cell is occupied
 		if &(self.board[(pos-1) as usize].player[..]) != " "{
 			//get the player's name
@@ -160,7 +164,7 @@ impl Game{
 			let mut thatplayer: Player = Player::new(" ".to_string());
 			for i in 0..self.players.len(){
 				if self.players[i].get_name() == name{
-					thatplayer = self.players[i];
+					thatplayer = self.players[i].clone();
 					break;
 				}
 			}
@@ -181,6 +185,14 @@ impl Game{
 		//set the names
 		self.board[(pos-1) as usize].player = player.name.clone();
 	}
+	
+	fn dice(&mut self, dicevec: &mut [&str]){
+ 		let mut dice_roll = Vec::new();
+ 		for i in dicevec {
+			dice_roll.push(i.parse().unwrap());
+		}
+ 		self.dice = dice_roll;
+ 	}
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
