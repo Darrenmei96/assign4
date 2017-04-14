@@ -182,6 +182,15 @@ impl Game{
 		self.board[(pos-1) as usize].player = player.name.clone();
 	}
 	
+	fn dice(&mut self, dicevec: &mut [&str]){
+		let mut dice_roll = Vec::new();
+		for i in dicevec {
+			dice_roll.push(i.parse().unwrap());
+		}
+		self.dice = dice_roll;
+	}
+	
+	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
 		let mut placeholder = String::from(get_grid(self.width));
