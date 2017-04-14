@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Error};
-use std::ptr;
-use std::collections::HashMap;
+use std::io;
+use std::io::BufRead;
 
 enum CellType{
 	NormalCell,
@@ -18,6 +18,7 @@ impl Display for CellType{
 	}
 }
 
+#[derive(Clone)]
 enum PowerupType{
 	Nothing,
 	Doubleroll,
@@ -68,16 +69,28 @@ impl Display for Cell{
 	}
 }
 
-
+#[derive(Clone)]
 struct Player{
-	name: char,
+	name: String,
 	powerups: Vec<PowerupType>,
+}
+
+impl Player{
+	fn new(name: String) -> Player{
+		Player{
+			name: name,
+			powerups: Vec::new(),
+		}
+	}
+	fn get_name(&self) -> &str{
+		&self.name
+	}
 }
 
 struct Game{
 	board: Vec<Cell>,
 	width: u32,
-	players: Vec<char>,
+	players: Vec<Player>,
 	dice: Vec<u32>,
 }
 
@@ -91,6 +104,26 @@ impl Game{
 		}
 	}
 	
+	fn do_command(&mut self, line: &str){
+		//Do the command given in the line
+		//firstly split the string by whitespace, the first is the name of the command
+		//splitting returns an iterator, so collect it into a vector of strings
+		let stringvec: Vec<&str> = line.split_whitespace().collect();
+		
+		//Now check the first item in the vector
+		match stringvec[0]{
+			//if it is a board command, call the board function
+			"board" => self.board(stringvec[1].parse::<u32>().unwrap(), 
+								  stringvec[2].parse::<u32>().unwrap()),
+			"players" => self.players(stringvec[1].parse::<u32>().unwrap()),
+			//"dice" => self.dice(&stringvec[1..]),
+			
+								  
+			_ => ()
+		}
+		
+	}
+	
 	fn board(&mut self, width: u32, height: u32){
 		//Make a board with dimensions of width and height
 		let cell_num = width * height;
@@ -100,6 +133,53 @@ impl Game{
 		}
 		self.board = board;
 		self.width = width;
+	}
+	
+	fn players(&mut self, player_count: u32){
+		//First, make the list of players
+		
+		let mut player_list = Vec::new();
+		let iter = (65..91).take(player_count as usize);
+		for i in iter{
+			player_list.push(Player::new((i as u8 as char).to_string()));
+		}
+		self.players = player_list;
+		
+		//put all the players on the first cell
+		for i in 0..self.players.len(){
+			self.move_to(self.players[i].clone(), 1);
+		}
+	}
+	
+	fn move_to(&mut self, &mut player: Player, pos: u32){
+		//if this cell is occupied
+		if &(self.board[(pos-1) as usize].player[..]) != " "{
+			//get the player's name
+			let name = self.board[(pos-1) as usize].player.clone();
+			//find that specific player
+			let mut thatplayer: Player = Player::new(" ".to_string());
+			for i in 0..self.players.len(){
+				if self.players[i].get_name() == name{
+					thatplayer = self.players[i];
+					break;
+				}
+			}
+			if &thatplayer.name[..] == " "{
+				//we didn't find the player for some reason
+				//do nothing as we don't know how to resolve this issue
+			}else{
+				//clear the current board's player string value
+				self.board[(pos-1) as usize].player = " ".to_string();
+				//and move the player into the next cell
+				self.move_to(thatplayer, pos+1);
+			}
+		}
+		//the cell is now cleared and there is no player on this cell now
+		//so let's try to land on it
+		
+		//place the player on to this empty cell
+		//set the names
+		self.board[(pos-1) as usize].player = player.name.clone();
 	}
 	
 	fn to_string(&self) -> String{
@@ -157,10 +237,6 @@ impl Game{
 		accumulator.push_str(&get_grid(width));
 		accumulator
 	}
-	
-	fn do_command(&mut self, line: &str){
-		
-	}
 }
 
 fn get_grid(width: u32) -> String{
@@ -177,14 +253,23 @@ fn main(){
 	game.board(5,5);
 	println!("{}", game.to_string());
 	println!("{}", game.width);
+	
+	let stdin = io::stdin();
+	let mut buffer = String::new();
+	for line in stdin.lock().lines(){
+		buffer.push_str(&line.unwrap());
+		buffer.push_str("\n");	
+	}
+	let a_game = read_from(&buffer);
+	println!("{}", a_game.to_string());
 }
 
 
 
-fn readFrom(input : &str) -> Game {
-	let game = Game::empty();
+fn read_from(input : &str) -> Game {
+	let mut game = Game::empty();
 	for line in input.lines(){
-		//game.do_command(line)
+		game.do_command(line)
 	}
 	game
 }
