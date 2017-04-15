@@ -20,25 +20,6 @@ impl Display for CellType{
 	}
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-enum PowerupType{
-	Antivenom,
-	Nothing,
-	Escalator,
-	Doubleroll,
-}
-
-impl Display for PowerupType{
-	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {
-		match *self{
-			PowerupType::Antivenom => write!(f,"a"),			
-			PowerupType::Doubleroll => write!(f,"d"),
-			PowerupType::Escalator => write!(f,"e"),
-			PowerupType::Nothing => write!(f," "),
-		}
-	}
-}
-
 struct Cell{
 	player: String,
 	cell_type: CellType,
@@ -68,9 +49,28 @@ impl Cell{
 
 impl Display for Cell{
 	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {		
-		write!(f, "|{}{}{}", &self.player, self.cell_type.to_string(), self.powerup_type.to_string());
+		write!(f, "|{}{}{}", &self.player, self.powerup_type.to_string(), self.cell_type.to_string());
 		
 		Ok(())
+	}
+}
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+enum PowerupType{
+	Antivenom,
+	Nothing,
+	Escalator,
+	Doubleroll,
+}
+
+impl Display for PowerupType{
+	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {
+		match *self{
+			PowerupType::Antivenom => write!(f,"a"),			
+			PowerupType::Doubleroll => write!(f,"d"),
+			PowerupType::Escalator => write!(f,"e"),
+			PowerupType::Nothing => write!(f," "),
+		}
 	}
 }
 
@@ -157,6 +157,14 @@ impl Game{
 								  		   stringvec[2].parse::<u32>().unwrap()),	 
 			"ladder" => self.abnormal_cell(stringvec[1].parse::<u32>().unwrap(), 
 								  		   stringvec[2].parse::<u32>().unwrap()),
+			"powerup" => {
+				match stringvec[1]{
+					"antivenom" => self.powerup_cells(PowerupType::Antivenom,&stringvec[2..]),
+					"double" => self.powerup_cells(PowerupType::Doubleroll,&stringvec[2..]),
+					"escalator" => self.powerup_cells(PowerupType::Escalator,&stringvec[2..]),
+					_ => ()
+				}			
+			}
 			//"turns" => self.turns(stringvec[1].parse::<u32>().unwrap()),
 								  
 			_ => ()
@@ -207,6 +215,12 @@ impl Game{
 		self.board[(from-1) as usize].cell_type = cell_type;
 	}
 	
+	fn powerup_cells(&mut self, powerup_type: PowerupType, list: &[&str]){
+		for cellNum in list{
+			self.board[cellNum.parse::<usize>().unwrap()-1].powerup_type = powerup_type.clone();
+		}
+	}
+	
 	fn move_to(&mut self, mut player: Player, pos: u32){
 		//if this cell is occupied
 		if &(self.board[(pos-1) as usize].player[..]) != " "{
@@ -240,7 +254,11 @@ impl Game{
 		
 		
 		//Are there any powerups to be collected?
-		
+		if self.board[(pos-1) as usize].powerup_type != PowerupType::Nothing{
+			//if there is a powerup
+			//add it into the player's inventory
+			player.add_powerup(self.board[(pos-1) as usize].powerup_type.clone());
+		}
 		
 		
 		//Are there any snakes or ladders to worry about?
@@ -357,10 +375,12 @@ fn get_grid(width: u32) -> String{
 }
 
 fn main(){
+	/*
 	let mut game = Game::empty();
 	game.board(5,5);
 	println!("{}", game.to_string());
 	println!("{}", game.width);
+	*/
 	
 	let stdin = io::stdin();
 	let mut buffer = String::new();
