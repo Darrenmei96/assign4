@@ -1,6 +1,6 @@
 [package]
 name = "assign4"
 version = "0.1.0"
-authors = ["Darren Mei <darren.mei@ryerson.ca>"]
+authors = ["Mustafa Malick <mustafa.malick@ryerson.ca>"]
 
 [dependencies]
