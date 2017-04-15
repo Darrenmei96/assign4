@@ -308,6 +308,16 @@ impl Game{
  		println!("{:?}",self.dice);
  	}
 	
+	fn roll(&mut self) -> u32 {
+		self.dice[self.players.len() % self.dice.len()]
+	}
+	
+	fn simulator(&self, player: Player){
+		for i in player {
+			self.move_to(i, player.get_position + self.roll);
+		}
+	}
+	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
 		let mut placeholder = String::from(get_grid(self.width));
