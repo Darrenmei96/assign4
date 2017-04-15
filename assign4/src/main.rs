@@ -1,38 +1,40 @@
 use std::fmt::{Display, Formatter, Error};
 use std::io;
 use std::io::BufRead;
+use std::collections::HashMap;
 
+#[derive(Clone, Eq, PartialEq)]
 enum CellType{
 	NormalCell,
-	SnakeCell,
 	LadderCell,
+	SnakeCell,
 }
 
 impl Display for CellType{
 	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {
 		match *self{
 			CellType::NormalCell => write!(f," "),
+			CellType::LadderCell => write!(f,"L"),
 			CellType::SnakeCell => write!(f,"S"),
-			CellType::LadderCell => write!(f,"L")
 		}
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 enum PowerupType{
-	Nothing,
-	Doubleroll,
 	Antivenom,
+	Nothing,
 	Escalator,
+	Doubleroll,
 }
 
 impl Display for PowerupType{
 	fn fmt(&self, f:&mut Formatter) -> Result<(), Error> {
 		match *self{
-			PowerupType::Nothing => write!(f," "),
+			PowerupType::Antivenom => write!(f,"a"),			
 			PowerupType::Doubleroll => write!(f,"d"),
-			PowerupType::Antivenom => write!(f,"a"),
-			PowerupType::Escalator => write!(f,"e")
+			PowerupType::Escalator => write!(f,"e"),
+			PowerupType::Nothing => write!(f," "),
 		}
 	}
 }
@@ -41,6 +43,7 @@ struct Cell{
 	player: String,
 	cell_type: CellType,
 	powerup_type: PowerupType,
+	offset: i32,
 }
 
 impl Cell{
@@ -49,13 +52,15 @@ impl Cell{
 			player: " ".to_string(),
 			cell_type: CellType::NormalCell, 
 			powerup_type: PowerupType::Nothing,
+			offset: 0,
 		}
 	}
-	fn new_with(player: &str, cell_type: CellType, powerup_type: PowerupType) -> Cell{
+	fn new_with(player: &str, cell_type: CellType, offset: i32, powerup_type: PowerupType) -> Cell{
 		Cell{
 			player: player.to_string(),
 			cell_type: cell_type,
 			powerup_type: powerup_type,
+			offset: offset,
 		}
 	}
 }
@@ -72,18 +77,44 @@ impl Display for Cell{
 #[derive(Clone)]
 struct Player{
 	name: String,
-	powerups: Vec<PowerupType>,
+	powerups: HashMap<PowerupType, bool>,
+	position: u32,
 }
 
 impl Player{
 	fn new(name: String) -> Player{
+		let mut mappings = HashMap::new();
+		mappings.insert(PowerupType::Antivenom, false);
+		mappings.insert(PowerupType::Doubleroll, false);
+		mappings.insert(PowerupType::Escalator, false);
 		Player{
 			name: name,
-			powerups: Vec::new(),
+			powerups: mappings,
+			position: 1,
 		}
 	}
 	fn get_name(&self) -> &str{
 		&self.name
+	}
+	fn get_position(&self) -> u32{
+		self.position
+	}
+	fn set_position(&mut self, i: u32){
+		self.position = i;
+	}
+	fn add_powerup(&mut self, powerup: PowerupType){
+		//if we aren't holding it already, add it in
+		if *self.powerups.get(&powerup).unwrap() == false{
+			*self.powerups.get_mut(&powerup).unwrap() = true;
+		}
+	}
+	fn consume_powerup(&mut self, powerup: PowerupType) -> bool{
+		if *self.powerups.get(&powerup).unwrap() == true{
+			*self.powerups.get_mut(&powerup).unwrap() = false;
+			true
+		}else{
+			false
+		}
 	}
 }
 
@@ -120,6 +151,10 @@ impl Game{
 					let mut s = &stringvec[1..];
 					self.dice(s);
 				}
+			"snake" => self.abnormal_cell(stringvec[1].parse::<u32>().unwrap(), 
+								  		   stringvec[2].parse::<u32>().unwrap()),	 
+			"ladder" => self.abnormal_cell(stringvec[1].parse::<u32>().unwrap(), 
+								  		   stringvec[2].parse::<u32>().unwrap()),
 			
 								  
 			_ => ()
@@ -155,6 +190,22 @@ impl Game{
 		}
 	}
 	
+	fn abnormal_cell(&mut self, from: u32, to: u32){
+		//get the diff
+		let offset = from as i32 - to as i32;
+		let mut cell_type = CellType::NormalCell;
+		
+		if offset < 0{
+			cell_type = CellType::SnakeCell;
+		}else if offset > 0 {
+			cell_type = CellType::LadderCell;
+		}
+		
+		self.board[(from-1) as usize].offset = offset;
+		self.board[(from-1) as usize].cell_type = cell_type;
+		
+	}
+	
 	fn move_to(&mut self, mut player: Player, pos: u32){
 		//if this cell is occupied
 		if &(self.board[(pos-1) as usize].player[..]) != " "{
@@ -180,6 +231,18 @@ impl Game{
 		}
 		//the cell is now cleared and there is no player on this cell now
 		//so let's try to land on it
+		//Is there a special cell here?
+		match self.board[(pos-1) as usize].cell_type{
+			CellType::SnakeCell => {
+			
+			}
+			CellType::LadderCell => {
+			
+			}
+			_ => {
+			
+			}
+		}
 		
 		//place the player on to this empty cell
 		//set the names
