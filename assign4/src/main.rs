@@ -123,6 +123,7 @@ struct Game{
 	width: u32,
 	players: Vec<Player>,
 	dice: Vec<u32>,
+	turns: u32,
 }
 
 impl Game{
@@ -132,6 +133,7 @@ impl Game{
 			width: 0,
 			players: Vec::new(),
 			dice: Vec::new(),
+			turns: 0,
 		}
 	}
 	
@@ -155,7 +157,7 @@ impl Game{
 								  		   stringvec[2].parse::<u32>().unwrap()),	 
 			"ladder" => self.abnormal_cell(stringvec[1].parse::<u32>().unwrap(), 
 								  		   stringvec[2].parse::<u32>().unwrap()),
-			
+			//"turns" => self.turns(stringvec[1].parse::<u32>().unwrap()),
 								  
 			_ => ()
 		}
@@ -192,7 +194,7 @@ impl Game{
 	
 	fn abnormal_cell(&mut self, from: u32, to: u32){
 		//get the diff
-		let offset = from as i32 - to as i32;
+		let offset = to as i32 - from as i32;
 		let mut cell_type = CellType::NormalCell;
 		
 		if offset < 0{
@@ -203,7 +205,6 @@ impl Game{
 		
 		self.board[(from-1) as usize].offset = offset;
 		self.board[(from-1) as usize].cell_type = cell_type;
-		
 	}
 	
 	fn move_to(&mut self, mut player: Player, pos: u32){
@@ -223,30 +224,61 @@ impl Game{
 				//we didn't find the player for some reason
 				//do nothing as we don't know how to resolve this issue
 			}else{
-				//clear the current board's player string value
+				//clear the current board cell's player string value
 				self.board[(pos-1) as usize].player = " ".to_string();
 				//and move the player into the next cell
 				self.move_to(thatplayer, pos+1);
 			}
 		}
 		//the cell is now cleared and there is no player on this cell now
-		//so let's try to land on it
-		//Is there a special cell here?
-		match self.board[(pos-1) as usize].cell_type{
-			CellType::SnakeCell => {
-			
-			}
-			CellType::LadderCell => {
-			
-			}
-			_ => {
-			
-			}
-		}
+		//so let's place the player on to this empty cell
 		
-		//place the player on to this empty cell
 		//set the names
 		self.board[(pos-1) as usize].player = player.name.clone();
+		//set the player's position
+		player.position = pos;
+		
+		
+		//Are there any powerups to be collected?
+		
+		
+		
+		//Are there any snakes or ladders to worry about?
+		let offset = self.board[(pos-1) as usize].offset;
+		let mut newpos = (pos as i32 + offset) as u32;
+		if newpos > 0 && newpos <= self.board.len() as u32{
+			if offset != 0{
+				//does the player have any protection or perks that can be used?
+				//check if the antivenom can be used
+				if offset < 0{
+					if !player.consume_powerup(PowerupType::Antivenom){
+						//it returned false, we dont have the powerup -- move
+						//clear the current board cell's player string value
+						self.board[(pos-1) as usize].player = " ".to_string();
+						//and move the player into the next cell
+						self.move_to(player, newpos);
+					}
+				}else if offset > 0{
+					if player.consume_powerup(PowerupType::Escalator){
+						//it returned true, we have the escalator powerup
+						//set our new position to new heights
+						newpos += offset as u32;
+						if newpos >= self.board.len() as u32{
+							newpos = self.board.len() as u32
+						}
+					}
+					//clear the current board cell's player string value
+					self.board[(pos-1) as usize].player = " ".to_string();
+					//and move the player into the next cell
+					self.move_to(player, newpos);
+				}else{
+					//clear the current board's player string value
+					self.board[(pos-1) as usize].player = " ".to_string();
+					//and move the player into the next cell
+					self.move_to(player, newpos);
+				}
+			}
+		}
 	}
 	
 	fn dice(&mut self, dicevec: &[&str]){
@@ -257,7 +289,6 @@ impl Game{
  		self.dice = dice_roll;
  		println!("{:?}",self.dice);
  	}
-
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
