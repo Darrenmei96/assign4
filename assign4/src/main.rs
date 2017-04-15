@@ -257,6 +257,7 @@ impl Game{
  		self.dice = dice_roll;
  		println!("{:?}",self.dice);
  	}
+
 	
 	fn to_string(&self) -> String{
 		//Convert the board to a string
